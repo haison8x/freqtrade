@@ -339,6 +339,11 @@ class Configuration:
             ("disableparamexport", "Parameter --disableparamexport detected: {} ..."),
             ("freqai_backtest_live_models", "Parameter --freqai-backtest-live-models detected ..."),
             ("backtest_notes", "Parameter --notes detected: {} ..."),
+            ("backtest_rank_hours", "Parameter --hours detected: {} ..."),
+            ("backtest_rank_top", "Parameter --top detected: {} ..."),
+            ("backtest_rank_by", "Parameter --rank-by detected: {} ..."),
+            ("backtest_rank_min_trades", "Parameter --min-trades detected: {} ..."),
+            ("backtest_rank_download", "Parameter --download detected ..."),
         ]
         self._args_to_config_loop(config, configurations)
 

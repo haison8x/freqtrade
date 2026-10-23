@@ -96,6 +96,25 @@ ARGS_LIST_FREQAIMODELS = ["freqaimodel_path", "print_one_column"]
 
 ARGS_LIST_HYPEROPTS = ["hyperopt_path", "print_one_column"]
 
+ARGS_BACKTEST_RANK = [
+    "timeframe",
+    "dataformat_ohlcv",
+    "max_open_trades",
+    "stake_amount",
+    "fee",
+    "pairs",
+    "enable_protections",
+    "dry_run_wallet",
+    "timeframe_detail",
+    "strategy_list",
+    "backtest_rank_hours",
+    "backtest_rank_top",
+    "backtest_rank_by",
+    "backtest_rank_min_trades",
+    "backtest_rank_download",
+    "exportdirectory",
+]
+
 ARGS_BACKTEST_SHOW = [
     "exportfilename",
     "exportdirectory",
@@ -387,6 +406,7 @@ class Arguments:
         from freqtrade.commands import (
             start_analysis_entries_exits,
             start_backtesting,
+            start_backtesting_rank,
             start_backtesting_show,
             start_convert_data,
             start_convert_db,
@@ -525,6 +545,16 @@ class Arguments:
         )
         backtesting_show_cmd.set_defaults(func=start_backtesting_show)
         self._build_args(optionlist=ARGS_BACKTEST_SHOW, parser=backtesting_show_cmd)
+
+        # Add backtesting-rank subcommand
+        backtesting_rank_cmd = subparsers.add_parser(
+            "backtesting-rank",
+            help="Backtest strategies over the last N hours, rank them and "
+            "recommend parameters for the best ones.",
+            parents=[_common_parser, _strategy_parser],
+        )
+        backtesting_rank_cmd.set_defaults(func=start_backtesting_rank)
+        self._build_args(optionlist=ARGS_BACKTEST_RANK, parser=backtesting_rank_cmd)
 
         # Add backtesting analysis subcommand
         analysis_cmd = subparsers.add_parser(

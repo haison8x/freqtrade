@@ -35,6 +35,7 @@ from freqtrade.commands.list_commands import (
 )
 from freqtrade.commands.optimize_commands import (
     start_backtesting,
+    start_backtesting_rank,
     start_backtesting_show,
     start_edge,
     start_hyperopt,

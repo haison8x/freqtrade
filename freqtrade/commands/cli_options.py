@@ -230,6 +230,12 @@ AVAILABLE_CLI_OPTIONS = {
         help="Provide a space-separated list of strategies to backtest. "
         "Please note that timeframe needs to be set either in config "
         "or via command line. ",
+        fthelp={
+            "freqtrade backtesting-rank": (
+                "Provide a space-separated list of strategies to rank. "
+                "Defaults to all strategies in the strategy directory."
+            ),
+        },
         nargs="+",
     ),
     "backtest_notes": Arg(
@@ -287,6 +293,42 @@ AVAILABLE_CLI_OPTIONS = {
         help="Load a cached backtest result no older than specified age (default: %(default)s).",
         default=constants.BACKTEST_CACHE_DEFAULT,
         choices=constants.BACKTEST_CACHE_AGE,
+    ),
+    # Backtesting rank
+    "backtest_rank_hours": Arg(
+        "--hours",
+        help="Backtest the last HOURS hours, ending at the last closed candle "
+        "(default: %(default)s).",
+        type=check_int_positive,
+        metavar="HOURS",
+        default=168,
+    ),
+    "backtest_rank_top": Arg(
+        "--top",
+        help="Show details and recommended parameters for the best N strategies "
+        "(default: %(default)s).",
+        type=check_int_positive,
+        metavar="INT",
+        default=3,
+    ),
+    "backtest_rank_by": Arg(
+        "--rank-by",
+        help="Metric used to rank strategies (default: %(default)s).",
+        choices=constants.BACKTEST_RANK_METRICS,
+        default="profit",
+    ),
+    "backtest_rank_min_trades": Arg(
+        "--min-trades",
+        help="Minimal number of trades for a strategy to be ranked among the best "
+        "(default: %(default)s).",
+        type=check_int_positive,
+        metavar="INT",
+        default=1,
+    ),
+    "backtest_rank_download": Arg(
+        "--download",
+        help="Download / update the required candle data before backtesting.",
+        action="store_true",
     ),
     # Hyperopt
     "hyperopt_path": Arg(

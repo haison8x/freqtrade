@@ -82,6 +82,15 @@ AVAILABLE_DATAHANDLERS = ["json", "jsongz", "feather", "parquet"]
 BACKTEST_BREAKDOWNS = ["day", "week", "month", "year", "weekday"]
 BACKTEST_CACHE_AGE = ["none", "day", "week", "month"]
 BACKTEST_CACHE_DEFAULT = "day"
+BACKTEST_RANK_METRICS = [
+    "profit",
+    "profit_factor",
+    "sharpe",
+    "sortino",
+    "calmar",
+    "expectancy",
+    "winrate",
+]
 DRY_RUN_WALLET = 1000
 DATETIME_PRINT_FORMAT = "%Y-%m-%d %H:%M:%S"
 MATH_CLOSE_PREC = 1e-14  # Precision used for float comparisons

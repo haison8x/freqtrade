@@ -62,6 +62,25 @@ def start_backtesting(args: dict[str, Any]) -> None:
     backtesting.start()
 
 
+def start_backtesting_rank(args: dict[str, Any]) -> None:
+    """
+    Backtest strategies over the last N hours, rank them and recommend parameters
+    :param args: Cli args from Arguments()
+    :return: None
+    """
+    from freqtrade.optimize.backtesting import Backtesting
+    from freqtrade.optimize.strategy_ranking import StrategyRanking
+
+    config = setup_optimize_configuration(args, RunMode.BACKTEST)
+
+    logger.info("Starting freqtrade in Backtesting rank mode")
+
+    try:
+        StrategyRanking(config).start()
+    finally:
+        Backtesting.cleanup()
+
+
 def start_backtesting_show(args: dict[str, Any]) -> None:
     """
     Show previous backtest result

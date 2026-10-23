@@ -342,6 +342,40 @@ The strategy is looked up in the strategy directory (`user_data/strategies` by d
 
 --8<-- "commands/backtesting-show.md"
 
+## Rank strategies over the last hours
+
+Backtests all strategies in the strategy directory (or the strategies passed via `--strategy-list`) over the last `--hours` hours, ranks them and shows the best `--top` strategies (3 by default).
+
+``` bash
+freqtrade backtesting-rank --config user_data/config.json --hours 72 --download
+```
+
+* The backtest window ends at the last fully closed candle. Each strategy is backtested on its own timeframe, unless `--timeframe` is given (or `timeframe` is set in the configuration).
+* `--download` downloads / updates the candle data needed for the window (including the startup candles of the strategies) before backtesting.
+* Strategies which fail to load or to backtest are skipped with a warning.
+* Strategies are ranked by total profit by default. Use `--rank-by` to rank by `profit_factor`, `sharpe`, `sortino`, `calmar`, `expectancy` or `winrate`. Strategies with less than `--min-trades` trades are always ranked last.
+
+The output contains:
+
+* A ranking table of all strategies, showing trades, win / draw / loss, total profit and whether the strategy made a **PROFIT** or a **LOSS** in the window.
+* For each of the best strategies, the detailed result: profit, balance, win rate, profit factor, expectancy, max drawdown, sharpe / sortino, average trade duration, best / worst pair and exit reasons.
+* Recommended parameters for each of the best strategies:
+    * `stoploss` - just below the drawdown 90% of the winning trades went through.
+    * `minimal_roi` - targeting the move half of the trades reached, decaying over multiples of the median trade duration.
+    * `trailing` - a trailing stop when winning trades gave back most of their best profit.
+
+    Every combination of these suggestions is backtested again on the same window. Only the combination which improves the ranking metric the most is marked as recommended - together with the backtest result it achieved.
+    If the strategy has hyperoptable parameters, their current values are shown together with a ready-to-use `freqtrade hyperopt` command for the same window.
+
+Besides the terminal output, an HTML report is written to the backtest results directory (`user_data/backtest_results/backtest-rank-<date>.html`, change it with `--export-directory`).
+The report contains the same information, a profit / loss bar chart of all strategies and - for each of the best strategies - the cumulative profit with the current and the recommended parameters.
+It is a single file without external dependencies, so it can be opened in any browser or shared.
+
+!!! Warning "Overfitting"
+    Recommended parameters are fitted to the selected window only. Verify them on a different period (and in dry-run) before using them with real money.
+
+--8<-- "commands/backtesting-rank.md"
+
 ## Detailed backtest analysis
 
 Advanced backtest result analysis.

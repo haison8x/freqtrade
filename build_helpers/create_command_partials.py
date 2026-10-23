@@ -39,6 +39,7 @@ def extract_command_partials():
         "list-data",
         "backtesting",
         "backtesting-show",
+        "backtesting-rank",
         "backtesting-analysis",
         "edge",
         "hyperopt",

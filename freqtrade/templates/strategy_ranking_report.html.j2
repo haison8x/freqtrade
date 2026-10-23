@@ -1,0 +1,343 @@
+{% autoescape true %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategy ranking</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --wash: rgba(11, 11, 11, 0.04);
+  --pos: #2a78d6;
+  --neg: #e34948;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --good: #006300;
+  --bad: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --wash: rgba(255, 255, 255, 0.05);
+    --pos: #3987e5;
+    --neg: #e66767;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --good: #0ca30c;
+    --bad: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --wash: rgba(255, 255, 255, 0.05);
+  --pos: #3987e5;
+  --neg: #e66767;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --good: #0ca30c;
+  --bad: #e66767;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; }
+h2 { font-size: 18px; font-weight: 600; margin: 0; }
+h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; }
+.sub { color: var(--text-2); margin: 0; }
+.muted { color: var(--muted); }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 24px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.tile .label { color: var(--text-2); font-size: 13px; }
+.tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; overflow-wrap: anywhere; }
+.tile .note { color: var(--muted); font-size: 13px; }
+.pos-text { color: var(--good); }
+.neg-text { color: var(--bad); }
+.badge { font-weight: 600; white-space: nowrap; }
+/* Ranking bars */
+.bars { margin-top: 16px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 200px) 1fr 72px; gap: 12px; align-items: center; padding: 4px 0; border-radius: 6px; }
+.bar-row:hover { background: var(--wash); }
+.bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+.bar-track { position: relative; height: 24px; }
+.bar-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
+.bar { position: absolute; top: 4px; height: 16px; }
+.bar.pos { background: var(--pos); border-radius: 0 4px 4px 0; }
+.bar.neg { background: var(--neg); border-radius: 4px 0 0 4px; }
+.bar-value { text-align: right; font-variant-numeric: tabular-nums; }
+/* Tables */
+.table-wrap { overflow-x: auto; margin-top: 16px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+th { color: var(--text-2); font-weight: 600; font-size: 13px; }
+th:nth-child(2), td:nth-child(2), .left { text-align: left; }
+tr:last-child td { border-bottom: 0; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); column-gap: 32px; }
+.kv div { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; border-bottom: 1px solid var(--grid); }
+.kv span:first-child { color: var(--text-2); }
+.kv span:last-child { text-align: right; overflow-wrap: anywhere; }
+.reco { min-width: 720px; }
+.reco td { white-space: normal; text-align: left; vertical-align: top; }
+.reco td.code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px; max-width: 260px; overflow-wrap: anywhere; }
+.applied { color: var(--good); font-weight: 600; }
+pre {
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  font: 12px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+  margin: 8px 0 0;
+}
+.notes { margin: 12px 0 0; padding-left: 18px; color: var(--text-2); }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+/* Line chart */
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; color: var(--text-2); font-size: 13px; }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.chart { position: relative; height: 240px; margin-top: 12px; }
+.plot { position: absolute; left: 56px; right: 12px; top: 8px; bottom: 28px; cursor: crosshair; }
+.plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.tick { position: absolute; left: 0; width: 48px; text-align: right; font-size: 12px; color: var(--muted); transform: translateY(-50%); font-variant-numeric: tabular-nums; }
+.xlabel { position: absolute; bottom: 0; font-size: 12px; color: var(--muted); }
+.dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--surface); transform: translate(-50%, -50%); pointer-events: none; }
+.crosshair { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); display: none; pointer-events: none; }
+#tooltip {
+  position: fixed;
+  z-index: 10;
+  display: none;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-width: 280px;
+}
+#tooltip .row { display: flex; gap: 8px; align-items: center; }
+#tooltip i { display: inline-block; width: 10px; height: 2px; }
+footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
+@media (max-width: 600px) {
+  .bar-row { grid-template-columns: 90px 1fr 60px; gap: 8px; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Strategy ranking</h1>
+  <p class="sub">Last {{ hours }} hours · {{ window_start }} → {{ window_end }} (UTC) · ranked by {{ rank_by }}</p>
+  <p class="sub muted">{{ pairs | length }} pairs: {{ pairs | join(", ") }}</p>
+
+  <section class="tiles">
+    {% for tile in tiles %}
+    <div class="tile">
+      <div class="label">{{ tile.label }}</div>
+      <div class="value{% if tile.sign > 0 %} pos-text{% elif tile.sign < 0 %} neg-text{% endif %}">{{ tile.value }}</div>
+      <div class="note">{{ tile.note }}</div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Total profit by strategy</h2>
+    <p class="sub">Backtest result over the selected period, {{ stake_currency }} wallet.</p>
+    <div class="bars">
+      {% for row in ranking %}
+      <div class="bar-row" data-tip="{{ row.name }} ({{ row.timeframe }}): {{ row.profit_pct }} · {{ row.profit_abs }} · {{ row.trades }} trades">
+        <div class="bar-name">{{ row.rank }}. {{ row.name }}</div>
+        <div class="bar-track">
+          <div class="bar-zero" style="left: {{ row.bar_zero }}%"></div>
+          {% if row.bar_width > 0 %}
+          <div class="bar {{ 'pos' if row.profit_total > 0 else 'neg' }}" style="left: {{ row.bar_left }}%; width: max({{ row.bar_width }}%, 2px)"></div>
+          {% endif %}
+        </div>
+        <div class="bar-value">{{ row.profit_pct }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th><th>Strategy</th><th>TF</th><th>Trades</th><th>Win / Draw / Loss</th><th>Win rate</th>
+            <th>Profit %</th><th>Profit {{ stake_currency }}</th><th>Result</th><th>Max DD</th>
+            {% if metric_header %}<th>{{ metric_header }}</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in ranking %}
+          <tr>
+            <td>{{ row.rank }}</td><td>{{ row.name }}</td><td>{{ row.timeframe }}</td><td>{{ row.trades }}</td>
+            <td>{{ row.wdl }}</td><td>{{ row.winrate }}</td><td>{{ row.profit_pct }}</td><td>{{ row.profit_abs }}</td>
+            <td class="badge {{ 'pos-text' if row.sign > 0 else 'neg-text' if row.sign < 0 else '' }}">{{ row.result }}</td>
+            <td>{{ row.max_dd }}</td>
+            {% if metric_header %}<td>{{ row.metric }}</td>{% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% for s in strategies %}
+  <section class="card">
+    <div class="head">
+      <h2>#{{ s.rank }} {{ s.name }}</h2>
+      <span class="badge {{ 'pos-text' if s.sign > 0 else 'neg-text' if s.sign < 0 else '' }}">{{ s.result }}</span>
+    </div>
+    <p class="sub">{{ s.timeframe }} · {{ s.period }}</p>
+
+    <div class="kv" style="margin-top: 12px">
+      {% for d in s.details %}
+      <div><span>{{ d.label }}</span><span class="{{ 'pos-text' if d.sign > 0 else 'neg-text' if d.sign < 0 else '' }}">{{ d.value }}</span></div>
+      {% endfor %}
+    </div>
+
+    {% if s.chart %}
+    <h3>Cumulative profit ({{ stake_currency }})</h3>
+    {% if s.chart.series | length > 1 %}
+    <div class="legend">
+      {% for line in s.chart.series %}<span><i style="background: var(--series-{{ line.slot }})"></i>{{ line.name }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    <div class="chart">
+      {% for tick in s.chart.ticks %}<div class="tick" style="top: calc(8px + (100% - 36px) * {{ tick.y / 100 }})">{{ tick.label }}</div>{% endfor %}
+      <div class="plot" data-series='{{ s.chart.series | tojson }}'>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {% for tick in s.chart.ticks %}
+          <line x1="0" x2="100" y1="{{ tick.y }}" y2="{{ tick.y }}" stroke="var({{ '--baseline' if tick.zero else '--grid' }})" stroke-width="1" vector-effect="non-scaling-stroke"/>
+          {% endfor %}
+          {% for line in s.chart.series %}
+          <polyline points="{{ line.polyline }}" fill="none" stroke="var(--series-{{ line.slot }})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          {% endfor %}
+        </svg>
+        {% for line in s.chart.series %}
+        <div class="dot" style="left: {{ line.last.x }}%; top: {{ line.last.y }}%; background: var(--series-{{ line.slot }})"></div>
+        {% endfor %}
+        <div class="crosshair"></div>
+      </div>
+      <div class="xlabel" style="left: 56px">{{ s.chart.start }}</div>
+      <div class="xlabel" style="right: 12px">{{ s.chart.end }}</div>
+    </div>
+    {% endif %}
+
+    <h3>Recommended parameters</h3>
+    {% if s.suggestions %}
+    <div class="table-wrap">
+      <table class="reco">
+        <thead><tr><th class="left">Parameter</th><th>Current</th><th class="left">Suggested</th><th class="left">Recommended</th><th class="left">Reason</th></tr></thead>
+        <tbody>
+          {% for p in s.suggestions %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td class="code">{{ p.current }}</td>
+            <td class="code">{{ p.recommended }}</td>
+            <td>{% if p.applied %}<span class="applied">✓ yes</span>{% else %}<span class="muted">no</span>{% endif %}</td>
+            <td>{{ p.reason }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="sub">No parameter changes derived.</p>
+    {% endif %}
+    {% if s.tuned %}<p>{{ s.tuned }}</p>{% endif %}
+    {% if s.params_code %}<p class="sub">Add to the strategy (or config):</p><pre>{{ s.params_code }}</pre>{% endif %}
+    {% if s.hyperopt_params %}<p class="sub" style="margin-top: 12px">Hyperoptable parameters: {{ s.hyperopt_params }}</p>{% endif %}
+    {% if s.hyperopt_cmd %}<pre>{{ s.hyperopt_cmd }}</pre>{% endif %}
+    {% if s.notes %}
+    <ul class="notes">{% for note in s.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    {% endif %}
+  </section>
+  {% endfor %}
+
+  <footer>Generated by freqtrade backtesting-rank on {{ generated }} (UTC). Backtest results do not guarantee future performance.</footer>
+</main>
+<div id="tooltip" role="tooltip"></div>
+<script>
+(function () {
+  var tip = document.getElementById("tooltip");
+  function show(html, x, y) {
+    tip.innerHTML = html;
+    tip.style.display = "block";
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(x + 14, window.innerWidth - w - 8);
+    var top = y + 14 + h > window.innerHeight ? y - h - 14 : y + 14;
+    tip.style.left = Math.max(8, left) + "px";
+    tip.style.top = Math.max(8, top) + "px";
+  }
+  function hide() { tip.style.display = "none"; }
+  function esc(text) {
+    var d = document.createElement("div");
+    d.textContent = text;
+    return d.innerHTML;
+  }
+  document.querySelectorAll("[data-tip]").forEach(function (el) {
+    el.addEventListener("mousemove", function (e) { show(esc(el.dataset.tip), e.clientX, e.clientY); });
+    el.addEventListener("mouseleave", hide);
+  });
+  document.querySelectorAll(".plot[data-series]").forEach(function (plot) {
+    var series = JSON.parse(plot.dataset.series);
+    var cross = plot.querySelector(".crosshair");
+    plot.addEventListener("mousemove", function (e) {
+      var rect = plot.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width * 100;
+      var rows = [], best = null;
+      series.forEach(function (s) {
+        var p = s.points[0];
+        s.points.forEach(function (q) { if (q.x <= x) { p = q; } });
+        if (best === null || Math.abs(p.x - x) < Math.abs(best.x - x)) { best = p; }
+        rows.push('<div class="row"><i style="background: var(--series-' + s.slot + ')"></i>' +
+          esc(s.name) + ': <b>' + p.v.toFixed(2) + '</b></div>');
+      });
+      cross.style.display = "block";
+      cross.style.left = x + "%";
+      var date = new Date(best.t).toISOString().slice(0, 16).replace("T", " ");
+      show('<div class="muted">' + date + '</div>' + rows.join(""), e.clientX, e.clientY);
+    });
+    plot.addEventListener("mouseleave", function () { cross.style.display = "none"; hide(); });
+  });
+})();
+</script>
+</body>
+</html>
+{% endautoescape %}
